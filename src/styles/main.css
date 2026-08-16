@@ -1,0 +1,38 @@
+@tailwind utilities;
+
+/* Core CSS custom properties matching exact brand guidelines */
+:root {
+  --primary-color: #5a4bda;
+  --primary-color-50: #f1efff;
+  --primary-color-100: #d2ccff;
+  --primary-color-200: #b2a9ff;
+  --primary-color-300: #9387ff;
+  --primary-color-400: #7363fc;
+  --primary-color-600: #4437b8;
+  --primary-color-700: #312596;
+  --primary-color-800: #211774;
+  --primary-color-900: #140d52;
+  --secondary-color: #e31b4d;
+  --secondary-color-50: #fce8ed;
+  --secondary-color-100: #f18da6;
+  --secondary-color-200: #ef7694;
+  --secondary-color-300: #ec5f83;
+  --secondary-color-400: #e94971;
+  --secondary-color-600: #cd1846;
+  --secondary-color-700: #b6163e;
+  --secondary-color-800: #a01336;
+  --secondary-color-900: #5b0b1f;
+  --font-family-reddit: 'RedditSans', 'Inter', sans-serif;
+}
+
+/* Error boundary overlay suppression */
+div[class*="error-boundary"],
+div[class*="ErrorBoundary"],
+[data-nextjs-dialog],
+[data-nextjs-dialog-header],
+.min-h-screen.flex-col.items-center.justify-center.p-6 {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}

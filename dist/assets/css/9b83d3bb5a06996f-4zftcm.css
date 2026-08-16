@@ -1,0 +1,2 @@
+input[type=checkbox]{position:relative}input[type=checkbox]:before{border:solid #fff;border-width:0 .125rem .125rem 0;content:"";display:none;height:.5rem;left:50%;position:absolute;top:50%;transform:translate(-50%,-50%) rotate(45deg);width:.25rem}input[type=checkbox]:checked:before{display:block}
+/*# sourceMappingURL=9b83d3bb5a06996f.css.map*/
