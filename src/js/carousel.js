@@ -59,10 +59,16 @@ export function initCarousel() {
 
     function goTo(index) {
       current = (index + total) % total;
-      // Each slide is 100% width, gap-4 = 16px
-      // Use percentage-based transform for responsiveness
-      const slideWidth = slides[0].getBoundingClientRect().width || track.parentElement.getBoundingClientRect().width;
-      track.style.transform = `translate3d(-${current * slideWidth}px, 0px, 0px)`;
+      const targetSlide = slides[current];
+      const firstSlide = slides[0];
+      let offset = 0;
+      if (targetSlide && firstSlide && targetSlide.offsetLeft !== undefined) {
+        offset = targetSlide.offsetLeft - firstSlide.offsetLeft;
+      } else {
+        const slideWidth = slides[0].getBoundingClientRect().width || track.parentElement.getBoundingClientRect().width;
+        offset = current * slideWidth;
+      }
+      track.style.transform = `translate3d(-${offset}px, 0px, 0px)`;
       updateDots(current);
     }
 
