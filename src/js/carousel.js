@@ -1,75 +1,119 @@
 /**
- * carousel.js - Pure vanilla JS hero banner carousel
- * Auto-slides every 4s, supports touch swipe, prev/next, dot navigation
+ * carousel.js - Fixes the hero banner carousel on the original pw.live HTML structure.
+ * The original used React state for sliding; this replaces that with pure JS.
+ *
+ * Original HTML structure:
+ *   <div role="region" aria-roledescription="carousel">
+ *     <div class="overflow-hidden">
+ *       <div class="flex gap-4" style="transform: translate3d(...)">   ← track
+ *         <div role="group" aria-roledescription="slide">…</div>       ← each slide
+ *       </div>
+ *     </div>
+ *     <div class="absolute w-full flex items-center justify-center -bottom-5">  ← dots wrapper
+ *       <div class="flex md:gap-3 gap-2 z-20">
+ *         <button …>  ← dot buttons (already in HTML)
+ *       </div>
+ *     </div>
+ *     <div … left-0><button …>Previous slide</button></div>  ← prev
+ *     <div … right-0><button …>Next slide</button></div>     ← next
+ *   </div>
  */
+
 export function initCarousel() {
-  const track = document.getElementById('carousel-track');
-  const slides = track ? track.querySelectorAll('.slide') : [];
-  const dotsContainer = document.getElementById('carousel-dots');
-  const prevBtn = document.getElementById('carousel-prev');
-  const nextBtn = document.getElementById('carousel-next');
+  // Find all carousel regions (there may be more than one on the page)
+  const carousels = document.querySelectorAll('[role="region"][aria-roledescription="carousel"]');
 
-  if (!track || slides.length === 0) return;
+  carousels.forEach(carousel => {
+    // The track: the flex container that holds all slides
+    const track = carousel.querySelector('.flex.gap-4, [defaultdotsbg]');
+    if (!track) return;
 
-  let current = 0;
-  let autoTimer = null;
-  const total = slides.length;
+    const slides = track.querySelectorAll('[role="group"][aria-roledescription="slide"]');
+    if (slides.length === 0) return;
 
-  // Build dots
-  if (dotsContainer) {
-    slides.forEach((_, i) => {
-      const dot = document.createElement('button');
-      dot.className = 'carousel-dot';
-      dot.setAttribute('aria-label', `Go to slide ${i + 1}`);
-      dot.addEventListener('click', () => goTo(i));
-      dotsContainer.appendChild(dot);
+    const total = slides.length;
+    let current = 0;
+    let autoTimer = null;
+
+    // Dot buttons (already rendered in HTML)
+    const dotsWrapper = carousel.querySelector('.flex.md\\:gap-3, .flex.gap-2.z-20, [class*="gap-2"][class*="z-20"]');
+    const dots = dotsWrapper ? dotsWrapper.querySelectorAll('button[type="button"]') : [];
+
+    // Prev/Next buttons
+    const prevContainer = carousel.querySelector('.left-0 button, [class*="left-0"] button');
+    const nextContainer = carousel.querySelector('.right-0 button, [class*="right-0"] button');
+
+    // Make track transition smoothly
+    track.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    track.style.willChange = 'transform';
+
+    // Dot color config from data attributes
+    const inactiveBg = track.getAttribute('defaultdotsbg') || '#D9DCE1';
+    const activeBg = track.getAttribute('activedotsbg') || '#414347';
+
+    function updateDots(index) {
+      dots.forEach((dot, i) => {
+        dot.style.backgroundColor = i === index ? activeBg : inactiveBg;
+      });
+    }
+
+    function goTo(index) {
+      current = (index + total) % total;
+      // Each slide is 100% width, gap-4 = 16px
+      // Use percentage-based transform for responsiveness
+      const slideWidth = slides[0].getBoundingClientRect().width || track.parentElement.getBoundingClientRect().width;
+      track.style.transform = `translate3d(-${current * slideWidth}px, 0px, 0px)`;
+      updateDots(current);
+    }
+
+    // Handle window resize — recalculate position
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => goTo(current), 100);
+    }, { passive: true });
+
+    function next() { goTo(current + 1); }
+    function prev() { goTo(current - 1); }
+
+    function startAuto() {
+      stopAuto();
+      autoTimer = setInterval(next, 4000);
+    }
+    function stopAuto() {
+      if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+    }
+
+    // Wire up dots
+    dots.forEach((dot, i) => {
+      dot.addEventListener('click', () => { stopAuto(); goTo(i); startAuto(); });
+      dot.style.cursor = 'pointer';
+      dot.style.transition = 'background-color 0.25s';
     });
-  }
 
-  function getDots() {
-    return dotsContainer ? dotsContainer.querySelectorAll('.carousel-dot') : [];
-  }
+    // Wire up prev/next
+    if (prevContainer) {
+      prevContainer.addEventListener('click', () => { stopAuto(); prev(); startAuto(); });
+    }
+    if (nextContainer) {
+      nextContainer.addEventListener('click', () => { stopAuto(); next(); startAuto(); });
+    }
 
-  function goTo(index) {
-    const dots = getDots();
-    slides[current].classList.remove('active');
-    if (dots[current]) dots[current].classList.remove('active');
+    // Touch swipe support
+    let touchStartX = 0;
+    track.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; stopAuto(); }, { passive: true });
+    track.addEventListener('touchend', e => {
+      const diff = touchStartX - e.changedTouches[0].clientX;
+      if (Math.abs(diff) > 50) diff > 0 ? next() : prev();
+      startAuto();
+    }, { passive: true });
 
-    current = (index + total) % total;
+    // Pause on hover
+    carousel.addEventListener('mouseenter', stopAuto);
+    carousel.addEventListener('mouseleave', startAuto);
 
-    slides[current].classList.add('active');
-    if (dots[current]) dots[current].classList.add('active');
-    track.style.transform = `translateX(-${current * 100}%)`;
-  }
-
-  function next() { goTo(current + 1); }
-  function prev() { goTo(current - 1); }
-
-  function startAuto() {
-    stopAuto();
-    autoTimer = setInterval(next, 4000);
-  }
-  function stopAuto() {
-    if (autoTimer) clearInterval(autoTimer);
-  }
-
-  // Init
-  goTo(0);
-  startAuto();
-
-  if (prevBtn) prevBtn.addEventListener('click', () => { stopAuto(); prev(); startAuto(); });
-  if (nextBtn) nextBtn.addEventListener('click', () => { stopAuto(); next(); startAuto(); });
-
-  // Touch swipe support
-  let touchStartX = 0;
-  track.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; stopAuto(); }, { passive: true });
-  track.addEventListener('touchend', e => {
-    const diff = touchStartX - e.changedTouches[0].clientX;
-    if (Math.abs(diff) > 50) diff > 0 ? next() : prev();
+    // Start
+    goTo(0);
     startAuto();
-  }, { passive: true });
-
-  // Pause on hover
-  track.addEventListener('mouseenter', stopAuto);
-  track.addEventListener('mouseleave', startAuto);
+  });
 }
