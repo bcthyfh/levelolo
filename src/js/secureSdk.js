@@ -1,5 +1,5 @@
 /**
- * secureSdk.js - Anti-tampering, HMAC request signing, and DevTools shield for zenithstudy.site
+ * secureSdk.js - HMAC request signing for zenithstudy.site
  */
 
 const SECRET_KEY = 'zenith_study_site_secure_token_2026';
@@ -71,44 +71,8 @@ export async function initSecureFetchInterceptor() {
 }
 
 /**
- * DevTools & Anti-Tampering Shield
- * Prevents casual inspection, shortcut keys, and right-click element inspection.
+ * Shield initialisation placeholder (DevTools & right-click enabled per user request)
  */
 export function initAntiTamperingShield() {
-  // 1. Disable Right-Click Context Menu
-  document.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-    return false;
-  }, false);
-
-  // 2. Disable DevTools Keyboard Shortcuts
-  document.addEventListener('keydown', (e) => {
-    // F12 key
-    if (e.keyCode === 123) {
-      e.preventDefault();
-      return false;
-    }
-    // Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
-    if (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) {
-      e.preventDefault();
-      return false;
-    }
-    // Ctrl+U (View Source)
-    if (e.ctrlKey && e.keyCode === 85) {
-      e.preventDefault();
-      return false;
-    }
-  }, false);
-
-  // 3. Anti-Debugger Loop
-  setInterval(() => {
-    const startTime = performance.now();
-    // Debugger trap trigger
-    (function () {}.constructor('debugger')());
-    const endTime = performance.now();
-    // If execution took long, DevTools paused on debugger
-    if (endTime - startTime > 100) {
-      console.clear();
-    }
-  }, 1000);
+  // DevTools, F12, right-click, and debugging are enabled
 }
