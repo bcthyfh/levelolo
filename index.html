@@ -11,21 +11,57 @@
       return true;
     } catch(e) { return false; }
   }
-  function createMockResponse() {
-    var dummyJson = JSON.stringify({ success: true, status: 200, data: {}, result: [] });
-    return new Response(dummyJson, { status: 200, statusText: "OK", headers: { "Content-Type": "application/json" } });
+  function createMockResponse(urlStr) {
+    var lower = (urlStr || '').toLowerCase();
+    var payload;
+    if (lower.includes('verify') || lower.includes('login') || lower.includes('auth')) {
+      payload = {
+        success: true,
+        status: 200,
+        statusCode: 200,
+        message: "Login Successful",
+        data: {
+          access_token: "mock_jwt_token_zenithstudy_2026",
+          token: "mock_jwt_token_zenithstudy_2026",
+          accessToken: "mock_jwt_token_zenithstudy_2026",
+          isNewUser: false,
+          user: {
+            id: "user_zenith_1001",
+            _id: "user_zenith_1001",
+            name: "Zenith Student",
+            primaryNumber: "+919876543210",
+            email: "student@zenithstudy.site"
+          }
+        }
+      };
+    } else if (lower.includes('otp') || lower.includes('callback')) {
+      payload = {
+        success: true,
+        status: 200,
+        statusCode: 200,
+        message: "OTP Sent Successfully",
+        data: {
+          otpId: "mock_otp_123456",
+          isOtpSent: true,
+          expireTime: 120
+        }
+      };
+    } else {
+      payload = { success: true, status: 200, statusCode: 200, data: {}, result: [] };
+    }
+    return new Response(JSON.stringify(payload), { status: 200, statusText: "OK", headers: { "Content-Type": "application/json" } });
   }
   if (originalFetch) {
     window.fetch = function(input, init) {
       var url = typeof input === "string" ? input : (input && input.url);
       var abs = url ? resolveUrl(url) : null;
       if (abs && CLONER_DATA_MANIFEST[abs]) {
-        return originalFetch(CLONER_DATA_MANIFEST[abs], init).catch(function() { return createMockResponse(); });
+        return originalFetch(CLONER_DATA_MANIFEST[abs], init).catch(function() { return createMockResponse(abs); });
       }
       if (abs && isExternalApi(abs)) {
-        return Promise.resolve(createMockResponse());
+        return Promise.resolve(createMockResponse(abs));
       }
-      return originalFetch(input, init).catch(function() { return createMockResponse(); });
+      return originalFetch(input, init).catch(function() { return createMockResponse(abs); });
     };
   }
   var OriginalXHR = window.XMLHttpRequest;
@@ -33,10 +69,11 @@
     var xhr = new OriginalXHR();
     var origOpen = xhr.open;
     var isExt = false;
+    var currentUrl = "";
     xhr.open = function(method, url) {
-      var abs = resolveUrl(url);
-      if (CLONER_DATA_MANIFEST[abs]) { return origOpen.call(xhr, "GET", CLONER_DATA_MANIFEST[abs], true); }
-      if (isExternalApi(abs)) { isExt = true; return origOpen.call(xhr, "GET", "data/myagrc.json", true); }
+      currentUrl = resolveUrl(url);
+      if (CLONER_DATA_MANIFEST[currentUrl]) { return origOpen.call(xhr, "GET", CLONER_DATA_MANIFEST[currentUrl], true); }
+      if (isExternalApi(currentUrl)) { isExt = true; return origOpen.call(xhr, "GET", "data/myagrc.json", true); }
       return origOpen.apply(xhr, arguments);
     };
     var origSend = xhr.send;

@@ -1,5 +1,5 @@
 /**
- * secureSdk.js - HMAC request signing for zenithstudy.site
+ * secureSdk.js - HMAC request signing for zenithstudy.site backend routes
  */
 
 const SECRET_KEY = 'zenith_study_site_secure_token_2026';
@@ -39,7 +39,8 @@ function generateNonce(length = 16) {
 }
 
 /**
- * Attach HMAC security headers to fetch requests targeting API/data endpoints
+ * Attach HMAC security headers ONLY to our backend API endpoints (/api/ & /data/)
+ * Avoid modifying external 3rd-party domains (penpencil, firebase) to prevent CORS preflight blocks.
  */
 export async function initSecureFetchInterceptor() {
   const originalFetch = window.fetch;
@@ -48,8 +49,9 @@ export async function initSecureFetchInterceptor() {
     let url = typeof input === 'string' ? input : (input && input.url);
     if (!url) return originalFetch.apply(this, arguments);
 
-    // If request is targeting API gateway or data endpoints, attach signature
-    if (url.includes('/api/') || url.includes('/data/') || url.includes('penpencil') || url.includes('firebase')) {
+    // Only attach custom signature headers to internal API gateway or data endpoints
+    const isInternalApi = url.includes('/api/gateway') || url.startsWith('/api/') || url.startsWith('/data/');
+    if (isInternalApi) {
       const timestamp = Date.now().toString();
       const nonce = generateNonce(16);
       const signature = await generateSignature(timestamp, nonce);
