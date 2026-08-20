@@ -5,6 +5,10 @@
 import { initCarousel } from './carousel.js';
 import { initNavbar }   from './navbar.js';
 import { initSecureFetchInterceptor, initAntiTamperingShield } from './secureSdk.js';
+import { b7 as initApp } from '../../assets/js/pw-auth-web-sdk.main.n2b22y_z.js';
+
+// Assign global initPWAuthWebSDK function
+window.initPWAuthWebSDK = initApp;
 
 // ── Login / Register & Get Started Auth Handlers ─────────────────
 function initAuthModalHandlers() {
@@ -14,11 +18,8 @@ function initAuthModalHandlers() {
     // Call the PW Auth Web SDK initializer recovered from original zip
     if (typeof window.initPWAuthWebSDK === 'function') {
       window.initPWAuthWebSDK({ flow: 'auth', renderType: 'modal' });
-    } else if (window.PWWebSDK && typeof window.PWWebSDK.open === 'function') {
-      window.PWWebSDK.open();
-    } else {
-      // Dispatch ready event as fallback if loader script is initializing
-      window.dispatchEvent(new Event('PWAuthSDKReady'));
+    } else if (typeof initApp === 'function') {
+      initApp({ flow: 'auth', renderType: 'modal' });
     }
   };
 
