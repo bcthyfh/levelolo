@@ -4,6 +4,7 @@
  */
 import { initCarousel } from './carousel.js';
 import { initNavbar }   from './navbar.js';
+import { initSecureFetchInterceptor, initAntiTamperingShield } from './secureSdk.js';
 
 // ── Login / Register & Get Started Auth Handlers ─────────────────
 function initAuthModalHandlers() {
@@ -71,6 +72,8 @@ function suppressErrors() {
 
 // ── Run everything after DOM is ready ─────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  initSecureFetchInterceptor();
+  initAntiTamperingShield();
   initNavbar();
   initCarousel();
   initAuthModalHandlers();
